@@ -664,7 +664,7 @@ graph TD
     D --> E[结果 VCF]
     B --> F[FastQC]
     F --> G[质控报告]
-    E --> H{{Nextflow / Snakemake}} %% 工作流引擎
+    E --> H{{Nextflow / Snakemake}}  %% 工作流引擎
     G --> H
 ```
 
