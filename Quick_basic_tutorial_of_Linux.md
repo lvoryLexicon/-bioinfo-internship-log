@@ -35,28 +35,138 @@ Linux 系统内置了大量实用的命令行工具，如 `grep`、`sed`、`awk`
 
 ## 三、常用命令详解
 
-1. **文件与目录操作**
+以下是为初学者整理的 Linux 常用命令详解，涵盖文件操作、文本处理、环境配置等核心技能，附实用示例：
 
-   * ls、cd、pwd、mkdir、rm、cp、mv
-   * 文件权限与属性：ls -l，chmod，chown，chgrp
-2. **查看文件内容**
+---
 
-   * cat、less、head、tail、more
-3. **文本处理基础**
+### 1. 文件与目录操作
+| 命令    | 说明                  | 常用参数示例             | 使用示例                                                                 |
+|---------|-----------------------|--------------------------|--------------------------------------------------------------------------|
+| **ls**  | 列出目录内容          | `-l`(详情) `-a`(隐藏文件) | `ls -la /home` 查看家目录所有文件（含隐藏文件）的详细信息                |
+| **cd**  | 切换目录              | `..`(上级目录) `~`(家目录) | `cd Documents` 进入 Documents 目录                                       |
+| **pwd** | 显示当前目录完整路径  | 无参数                   | `pwd` → 输出 `/home/user`                                                |
+| **mkdir**| 创建目录              | `-p`(创建多级目录)       | `mkdir -p project/code` 递归创建 project 和其子目录 code                 |
+| **rm**  | 删除文件/目录         | `-r`(递归删除) `-f`(强制) | `rm -rf old_dir/` ⚠️强制删除目录（慎用！）                               |
+| **cp**  | 复制文件              | `-r`(复制目录) `-i`(确认) | `cp -r dir1/ dir2/` 将 dir1 整个复制到 dir2 中                           |
+| **mv**  | 移动/重命名文件       | `-i`(覆盖确认)           | `mv file.txt new_name.txt` 重命名文件                                    |
+| **chmod**| 修改权限              | `u+x`(用户增加执行权限)   | `chmod 755 script.sh` 设置文件权限为 rwxr-xr-x                           |
+| **chown**| 修改文件所有者        | `user:group`             | `sudo chown user:admins data.log` 修改所有者和所属组                     |
 
-   * grep、wc、sort、uniq、cut、awk（简单示例）、sed（简单示例）
-4. **查找与定位**
+> **权限说明**：  
+> `ls -l` 输出示例：`-rw-r--r-- 1 user group 1024 Jan 1 10:00 file.txt`  
+> \- 首字符：`-`=文件，`d`=目录  
+> \- 后续9位：三组 `rwx`（读/写/执行），分别对应 **用户**、**用户组**、**其他人**
 
-   * find、locate、which
-5. **文件压缩与解压**
+---
 
-   * tar、gzip、gunzip、zip、unzip
-6. **环境变量与路径**
+### 2. 查看文件内容
+| 命令     | 特点                          | 使用场景示例                         |
+|----------|-------------------------------|--------------------------------------|
+| **cat**  | 一次性显示全部内容            | `cat config.conf` 查看小文件         |
+| **less** | 分页浏览（可上下翻页）        | `less large.log` 按空格翻页，`q`退出 |
+| **head** | 显示文件开头部分（默认10行）   | `head -n 20 access.log` 查看前20行   |
+| **tail** | 显示文件末尾（实时追踪更新）   | `tail -f app.log` 实时监控日志更新   |
 
-   * echo \$PATH、export、.bashrc简介
-7. **软件安装与包管理（视发行版而定）**
+---
 
-   * yum、apt-get基础
+### 3. 文本处理基础
+```bash
+# 搜索包含"error"的行
+grep "error" system.log
+
+# 统计文件行数/单词数
+wc -l file.txt      # 行数统计
+wc -w report.md     # 单词计数
+
+# 排序并去重
+sort names.txt | uniq > sorted_names.txt
+
+# 提取每行第一列（默认以空格/tab分隔）
+cut -d' ' -f1 data.csv
+
+# 提取日志中第一列和第四列
+awk '{print $1,$4}' access.log
+
+# 替换文本中的字符串
+sed 's/old/new/g' file.txt  # 将文件中所有old替换为new
+```
+
+---
+
+### 4. 查找与定位
+| 命令       | 搜索目标                | 示例                                      |
+|------------|-------------------------|-------------------------------------------|
+| **find**   | 实时搜索文件（功能强大）| `find /var -name "*.log"` 查找日志文件    |
+| **locate** | 数据库搜索（速度快）    | `locate nginx.conf` 需先运行 `sudo updatedb` |
+| **which**  | 查找命令所在路径        | `which python` → `/usr/bin/python`        |
+
+---
+
+### 5. 文件压缩与解压
+```bash
+# 打包并压缩目录
+tar -czvf archive.tar.gz my_folder/
+
+# 解压 .tar.gz 文件
+tar -xzvf archive.tar.gz
+
+# 压缩单个文件
+gzip bigfile.txt    # 生成 bigfile.txt.gz
+
+# ZIP压缩/解压
+zip -r data.zip data/    # 压缩目录
+unzip data.zip -d target/ # 解压到指定目录
+```
+
+---
+
+### 6. 环境变量与路径
+```bash
+# 查看当前PATH设置
+echo $PATH  # 输出: /usr/bin:/bin:/usr/local/bin
+
+# 临时添加环境变量
+export PATH=$PATH:/new/path
+
+# 永久生效 → 编辑 ~/.bashrc 文件末尾添加：
+export PATH="$PATH:/your/custom/path"
+# 保存后运行 source ~/.bashrc 立即生效
+```
+
+---
+
+### 7. 软件安装（包管理）
+**Debian/Ubuntu (APT)**
+```bash
+sudo apt update              # 更新软件源列表
+sudo apt install nginx       # 安装Nginx
+sudo apt remove firefox      # 卸载软件包
+```
+
+**CentOS/RHEL (YUM)**
+```bash
+sudo yum check-update        # 检查更新
+sudo yum install httpd       # 安装Apache
+sudo yum remove mysql        # 移除软件
+```
+
+> 提示：  
+> - `sudo` 表示以管理员权限执行  
+> - 安装失败时尝试先更新软件源（`apt update` / `yum check-update`）
+
+---
+
+### ✨ 初学者贴士：
+1. **查看命令帮助**：  
+   `命令 --help`（简易帮助） 或 `man 命令`（完整手册）
+2. **谨慎使用 `rm`**：  
+   删除前用 `ls` 确认路径，重要文件先备份！
+3. **善用 Tab 补全**：  
+   输入部分文件名后按 Tab 键自动补全
+4. **日志查看技巧**：  
+   `grep -A 3 "error" logfile` 显示匹配行及**后3行**上下文
+
+掌握这些命令后，你将能高效管理 Linux 系统的基础操作！遇到问题多查手册(`man`)，实践是最好的学习方式。
 
 ---
 
