@@ -657,14 +657,14 @@ samtools tview -p chr6:100000 aligned.bam  # 快速定位区域
 ### 5、可重复研究的基础架构
 **工作流管理系统集成**：  
 ```mermaid
-graph LR
-    A[原始FASTQ] --> B(Shell脚本)
-    B --> C[bwa/samtools]
+graph TD
+    A[原始 FASTQ] --> B(Shell 脚本)
+    B --> C[bwa / samtools]
     C --> D[GATK]
-    D --> E[结果VCF]
+    D --> E[结果 VCF]
     B --> F[FastQC]
     F --> G[质控报告]
-    E --> H{{Nextflow/Snakemake}}  # 工作流引擎
+    E --> H{{Nextflow / Snakemake}} %% 工作流引擎
     G --> H
 ```
 
