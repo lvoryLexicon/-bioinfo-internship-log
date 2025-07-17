@@ -150,3 +150,39 @@ samtools index zzq_hv.sorted.bam
 
 
 4. 可视化比对结果：在 IGV 中加载 human_virus.fa 和 zzq_hv.sorted.bam
+
+
+###实测能用的命令：
+
+这个命令做清洗
+fastp \
+  -i zzq_1.fq.gz \
+  -I zzq_2.fq.gz \
+  -o zzq_1.clean.fq.gz \
+  -O zzq_2.clean.fq.gz \
+  -w 12 \
+  --detect_adapter_for_pe \
+  --thread 12 \
+  --html fastp_report.html \
+  --json fastp.json
+
+
+
+这个命令做比对
+# 进入genome目录（如果当前不在该目录）
+cd ~/genome
+
+# 使用BWA进行比对，12线程，输出进度信息
+bwa mem -t 12 -p -v 1 \
+  fixed_human_virus.fa \
+  ../zzq_1.clean.fq.gz ../zzq_2.clean.fq.gz \
+  2>&1 | tee bwa_alignment.log | grep -E '^\[M::|Processed'
+
+# 将SAM转换为排序的BAM文件（使用12线程）
+samtools sort -@ 12 -O bam -o zzq_hv_sorted.bam zzq_hv.sam
+
+# 创建BAM索引
+samtools index -@ 12 zzq_hv_sorted.bam
+
+# 清理临时文件（可选）
+rm zzq_hv.sam
