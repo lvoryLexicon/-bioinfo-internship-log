@@ -1,5 +1,5 @@
 代码
-'''
+'''bash
 #!/usr/bin/env bash
 # align_human_virus.sh  简明版 + 国内源环境加载
 # 步骤：配置国内 Conda 源，激活环境，合并参考、索引、比对、排序、索引、统计
