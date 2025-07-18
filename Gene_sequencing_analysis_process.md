@@ -1,191 +1,46 @@
-这是从参考基因组准备到序列比对数据处理再到可视化的全过程的教程，按照标准二代测序（NGS）流程逻辑，教程会说明每一步的作用与成果。
-
----
-
- ✅ 1. 目标理解与工作方向明确
-
-明确本项目的核心目标：
-
-> 利用病人样本中的 DNA 测序数据，通过比对人类参考基因组，检测是否存在病毒序列插入（例如 TTMV），并定位其位置。
-
----
-
- ✅ 2. 参考基因组下载与定位
-
-找到可用的人类基因组文件：
- 例如：
- 文件名：GRCh38.primary_assembly.genome.fa
- 位置：/public/DATA/common_data/genome/hg38/
-
-📌 作用：这是一份国际标准的人类基因组序列，作为比对的“参照”。
-
----
-
- ✅ 3. 复制参考基因组到个人工作目录
-
-将 GRCh38.primary_assembly.genome.fa 复制到你自己的工作目录中：
-
-bash
-cp /public/DATA/common_data/genome/hg38/GRCh38.primary_assembly.genome.fa ~/genome/
+#代码
 
 
-📂 你的工作目录路径为：/public/home/shenyz/genome/
+#!/usr/bin/env bash
+# align_human_virus.sh  简明版 + 国内源环境加载
+# 步骤：配置国内 Conda 源，激活环境，合并参考、索引、比对、排序、索引、统计
 
----
+# ---- 0. 配置国内 Conda 源（首次运行） ----
+# conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+# conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+# conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+# conda config --set show_channel_urls yes
 
- ✅ 4. 为人类基因组构建 BWA 索引
+# ---- 1. 创建并激活环境（如未创建） ----
+if ! conda env list | grep -q bioinfo; then
+  conda create -y -n bioinfo bwa samtools
+fi
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate bioinfo
 
-使用 bwa index 为参考基因组构建索引：
+# ---- 2. 合并人类和病毒基因组 ----
+cat /public/DATA/common_data/genome/hg38/GRCh38.primary_assembly.genome.fa \
+    ~/genome/TTMV.fa > human_virus.fa
 
-bash
-bwa index GRCh38.primary_assembly.genome.fa
-
-
-🔧 输出文件包括：
-
- .amb, .ann, .bwt, .pac, .sa
-
-📌 作用：BWA 索引能让后续比对迅速定位参考序列，提高效率。
-
----
-
- ✅ 5. 原始测序数据（样本 FASTQ）准备
-
-已经准备好的成对的 clean FASTQ 文件：
-
-bash
-zzq_1.clean.fq
-zzq_2.clean.fq
-
-
-✅ 这通常来自于下游质控工具的输出，如：Trimmomatic、fastp
-
----
-
- ✅ 6. 掌握 Seqkit 并完成质控统计
-
-安装 seqkit 并使用以下命令进行基本质量统计：
-
-bash
-seqkit stats -j 12 zzq_1.clean.fq zzq_2.clean.fq
-
-
-📊 得到的信息包括：
-
- 总序列数
- 总碱基数
- N50、GC 含量、最大/最小序列长度等
-
-📌 作用：确认数据规模与质量，为比对和后续分析提供判断依据。
-
----
-
- ✅ 7. 掌握了多线程比对命令的写法
-
-学会如何使用 bwa mem 多线程比对：
-
-bash
-bwa mem -t 12 GRCh38.primary_assembly.genome.fa zzq_1.clean.fq zzq_2.clean.fq > zzq.sam 2> bwa_mem.log
-
-
-📌 作用：将样本 DNA 序列与参考基因组比对，输出 .sam 格式文件以供下游处理。
-
----
-
- ✅ 8. 发现流程问题并及时修正思路
-
-例如更优解：
-
-> 应该将病毒基因组（如 TTMV）和人类参考基因组合并，再构建索引并比对。这样才能让 BWA 识别病毒插入序列。
-
-已经具备如下条件：
-
- TTMV.fa 病毒序列已在工作目录中
- 合并 fasta 的做法：
-
-bash
-cat GRCh38.primary_assembly.genome.fa TTMV.fa > human_virus.fa
-
-
- 已准备重新索引并比对
-
----
-
- 🧩 到目前为止的关键成果汇总
-
-| 模块      | 完成情况 | 说明                          |
-| ------- | ---- | --------------------------- |
-| 项目目标理解  | ✅    | 明确目标是检测病毒插入片段               |
-| 环境准备    | ✅    | 安装了 BWA、Seqkit，掌握了 Linux 操作 |
-| 基因组文件准备 | ✅    | 下载并索引了 GRCh38               |
-| 测序数据准备  | ✅    | clean FASTQ 文件就绪            |
-| 数据统计与质控 | ✅    | 使用 seqkit 获取质量指标            |
-| 比对流程掌握  | ✅    | 熟悉 bwa mem 和后台运行（nohup）   |
-| 方法更新    | ✅    | 明白需要合并人类+病毒序列参考基因组          |
-
----
-
- ✅ 下一步推荐操作（按顺序）
-
-1. 合并参考基因组并索引
-
-bash
-cd ~/genome
-cat GRCh38.primary_assembly.genome.fa ~/TTMV.fa > human_virus.fa
+# ---- 3. 建立 bwa 和 samtools 索引 ----
 bwa index human_virus.fa
+samtools faidx human_virus.fa
 
+# ---- 4. 用 bwa mem 比对，输出 sam ----
+bwa mem -t 12 human_virus.fa zzq_1.clean.fq.gz zzq_2.clean.fq.gz > zzq_hv.sam
 
-2. 重新运行比对任务
+# ---- 5. 把 sam 转成排序好的 bam ----
+samtools sort -@ 12 -o zzq_hv.sorted.bam zzq_hv.sam
 
-bash
-nohup bwa mem -t 12 human_virus.fa ~/zzq_1.clean.fq ~/zzq_2.clean.fq > zzq_hv.sam 2> bwa_hv.log &
-
-
-3. 后处理：转换为 BAM、排序、建索引
-
-bash
-samtools view -Sb zzq_hv.sam > zzq_hv.bam
-samtools sort zzq_hv.bam -o zzq_hv.sorted.bam
+# ---- 6. 给排序后的 bam 建立索引（生成 .bai） ----
 samtools index zzq_hv.sorted.bam
 
+# ---- 7. 生成比对统计报告 ----
+samtools flagstat zzq_hv.sorted.bam > zzq_hv.flagstat.txt
 
-4. 可视化比对结果：在 IGV 中加载 human_virus.fa 和 zzq_hv.sorted.bam
+# ---- 完成提示 ----
+echo "done: zzq_hv.sorted.bam, zzq_hv.sorted.bam.bai, zzq_hv.flagstat.txt"
 
-
-###实测能用的命令：
-
-这个命令做清洗
-fastp \
-  -i zzq_1.fq.gz \
-  -I zzq_2.fq.gz \
-  -o zzq_1.clean.fq.gz \
-  -O zzq_2.clean.fq.gz \
-  -w 12 \
-  --detect_adapter_for_pe \
-  --thread 12 \
-  --html fastp_report.html \
-  --json fastp.json
-
-
-
-这个命令做比对
-# 进入genome目录（如果当前不在该目录）
-cd ~/genome
-
-# 使用BWA进行比对，12线程，输出进度信息
-bwa mem -t 12 -p -v 1 \
-  fixed_human_virus.fa \
-  ../zzq_1.clean.fq.gz ../zzq_2.clean.fq.gz \
-  2>&1 | tee bwa_alignment.log | grep -E '^\[M::|Processed'
-
-# 将SAM转换为排序的BAM文件（使用12线程）
-samtools sort -@ 12 -O bam -o zzq_hv_sorted.bam zzq_hv.sam
-
-# 创建BAM索引
-samtools index -@ 12 zzq_hv_sorted.bam
-
-# 清理临时文件（可选）
-rm zzq_hv.sam
 
 
 
