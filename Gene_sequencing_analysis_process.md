@@ -1,4 +1,4 @@
-#代码:
+# 代码:
 ```bash
 #!/usr/bin/env bash
 # align_human_virus.sh  
