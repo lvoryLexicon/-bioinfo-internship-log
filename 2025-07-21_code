@@ -1,0 +1,29 @@
+这是登录服务器的指令
+ssh shenyz@222.29.188.221
+这是上传文件的代码
+scp /Users/shenyz/Downloads/delly_v1.3.3_linux_x86_64bit shenyz@222.29.188.221:/public/home/shenyz
+这是让可执行文件获取权限的代码
+chmod +x delly_v1.3.3_linux_x86_64bit
+打开文件
+./delly_v1.3.3_linux_x86_64bit
+对比参考基因组和.bam文件
+./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf zzq_hv.sorted.bam
+使用多线程的话命令如下
+OMP_NUM_THREADS=12 ./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf zzq_hv.sorted.bam
+这一步得出的结果都是0，另外，老师说多线程是预编译的，所以在执行的时候不能多核，另外要检查的是插入：INS
+OMP_NUM_THREADS=12 ./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf map.sorted.bam
+
+只检测特定变异类型（如缺失）
+OMP_NUM_THREADS=4 ./delly_v1.3.3_linux_x86_64bit call -t INS -g fixed_human_virus.fa -o delly_DEL.bcf map.sorted.bam
+
+重新比对了一下，去掉了-ps
+bwa mem -t 12 -v 1 fixed_human_virus.fa ../zzq_1.clean.fq.gz ../zzq_2.clean.fq.gz > map.sam
+重新排序
+samtools sort -@ 12 -o map.sorted.bam map.sam
+
+用来看文件大小
+ll -rth
+这一步把BND都提取出来了
+bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND.vcf delly_ALL.vcf
+使用 bcftools 精确筛选chr17
+bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND_chr17.vcf delly_ALL.vcf
