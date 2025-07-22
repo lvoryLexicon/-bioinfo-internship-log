@@ -27,3 +27,66 @@ ll -rth
 bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND.vcf delly_ALL.vcf
 使用 bcftools 精确筛选chr17
 bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND_chr17.vcf delly_ALL.vcf
+
+对数据进行清洗
+fastp -i zzq2_1.fq.gz -I zzq2_2.fq.gz \
+      -o zzq2_1.trim.fq.gz -O zzq2_2.trim.fq.gz \
+      --thread 12 --detect_adapter_for_pe
+对数据进行比对
+bwa mem -t 12 fixed_human_virus.fa \
+        zzq2_1.trim.fq.gz zzq2_2.trim.fq.gz \
+  | samtools view -b - \
+  | samtools sort -@ 4 -o zzq2.sorted.bam
+samtools index zzq2.sorted.bam
+
+添加 Bioconda & Conda-forge 源，再重新创建环境
+# 添加必要的生信源
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+
+# 创建新环境并安装 bcftools
+conda create -n bcf_env bcftools=1.17 -y
+
+# 激活新环境
+conda activate bcf_env
+
+# 转换 bcf 为 vcf
+bcftools view all_sv.bcf -Ov -o delly_ALL2.vcf
+这一步把BND都提取出来了
+bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND2.vcf delly_ALL2.vcf
+使用 bcftools 精确筛选chr17
+bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND2_chr17.vcf delly_ALL2.vcf
+搜索是否有病毒在新的文件
+grep MN772835 delly_ALL2.vcf(失败）
+
+检查环境的命令
+ conda environments:
+激活我之前的环境
+conda activate bcftools_env
+看看版本号
+bcftools 1.17
+bgzip 压缩 VCF 文件
+bgzip delly_BND_chr17.vcf
+bgzip delly_BND2_chr17.vcf
+建立 tabix 索引
+tabix -p vcf delly_BND_chr17.vcf.gz
+tabix -p vcf delly_BND2_chr17.vcf.gz
+重新运行合并命令
+bcftools concat -a -O v -o merged_BND_chr17.vcf delly_BND_chr17.vcf.gz delly_BND2_chr17.vcf.gz
+
+合并bam（注意一定得有索引文件）
+samtools merge -@ 12 merged.bam zzq2.sorted.bam map.sorted.bam
+对bam进行索引
+samtools index merged.bam
+跑delly：
+./delly_v1.3.3_linux_x86_64bit call \
+  -g reference.fa \
+  -o merged.sv.bcf \
+  merged.bam
+筛选一下BND
+grep "SVTYPE=BND" merged.sv.vcf > merged.BND.vcf
+
+
+
