@@ -1,124 +1,276 @@
-这是登录服务器的指令
+## 登录服务器
+
+```bash
 ssh shenyz@222.29.188.221
-这是上传文件的代码
+```
+
+## 上传文件
+
+```bash
 scp /Users/shenyz/Downloads/delly_v1.3.3_linux_x86_64bit shenyz@222.29.188.221:/public/home/shenyz
-这是让可执行文件获取权限的代码
+```
+
+## 设置执行权限
+
+```bash
 chmod +x delly_v1.3.3_linux_x86_64bit
-打开文件
+```
+
+## 执行程序
+
+```bash
 ./delly_v1.3.3_linux_x86_64bit
-对比参考基因组和.bam文件
+```
+
+## 对比参考基因组和 .bam 文件
+
+```bash
 ./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf zzq_hv.sorted.bam
-使用多线程的话命令如下
+```
+
+## 使用多线程（可能不支持）
+
+```bash
 OMP_NUM_THREADS=12 ./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf zzq_hv.sorted.bam
-这一步得出的结果都是0，另外，老师说多线程是预编译的，所以在执行的时候不能多核，另外要检查的是插入：INS
+```
+
+## 检查插入 INS
+
+```bash
 OMP_NUM_THREADS=12 ./delly_v1.3.3_linux_x86_64bit call -g fixed_human_virus.fa -o delly_output.bcf map.sorted.bam
+```
 
-只检测特定变异类型（如缺失）
+## 只检测特定变异类型（如 INS）
+
+```bash
 OMP_NUM_THREADS=4 ./delly_v1.3.3_linux_x86_64bit call -t INS -g fixed_human_virus.fa -o delly_DEL.bcf map.sorted.bam
+```
 
-重新比对了一下，去掉了-ps
+## 重新比对（去掉 -ps 参数）
+
+```bash
 bwa mem -t 12 -v 1 fixed_human_virus.fa ../zzq_1.clean.fq.gz ../zzq_2.clean.fq.gz > map.sam
-重新排序
+```
+
+## 重新排序
+
+```bash
 samtools sort -@ 12 -o map.sorted.bam map.sam
+```
 
-用来看文件大小
+## 查看文件大小
+
+```bash
 ll -rth
-这一步把BND都提取出来了
-bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND.vcf delly_ALL.vcf
-使用 bcftools 精确筛选chr17
-bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND_chr17.vcf delly_ALL.vcf
+```
 
-对数据进行清洗
+## 提取 BND
+
+```bash
+bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND.vcf delly_ALL.vcf
+```
+
+## 精确筛选 chr17 的 BND
+
+```bash
+bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND_chr17.vcf delly_ALL.vcf
+```
+
+## 对数据进行清洗
+
+```bash
 fastp -i zzq2_1.fq.gz -I zzq2_2.fq.gz \
       -o zzq2_1.trim.fq.gz -O zzq2_2.trim.fq.gz \
       --thread 12 --detect_adapter_for_pe
-对数据进行比对
+```
+
+## 对数据进行比对
+
+```bash
 bwa mem -t 12 fixed_human_virus.fa \
         zzq2_1.trim.fq.gz zzq2_2.trim.fq.gz \
   | samtools view -b - \
   | samtools sort -@ 4 -o zzq2.sorted.bam
-samtools index zzq2.sorted.bam
+```
 
-添加 Bioconda & Conda-forge 源，再重新创建环境
-# 添加必要的生信源
+## 建立索引
+
+```bash
+samtools index zzq2.sorted.bam
+```
+
+## 添加 Bioconda & Conda-forge 源，再重新创建环境
+
+```bash
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --set channel_priority strict
+```
 
-# 创建新环境并安装 bcftools
+## 创建新环境并安装 bcftools
+
+```bash
 conda create -n bcf_env bcftools=1.17 -y
+```
 
-# 激活新环境
+## 激活新环境
+
+```bash
 conda activate bcf_env
+```
 
-# 转换 bcf 为 vcf
+## 转换 bcf 为 vcf
+
+```bash
 bcftools view all_sv.bcf -Ov -o delly_ALL2.vcf
-这一步把BND都提取出来了
-bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND2.vcf delly_ALL2.vcf
-使用 bcftools 精确筛选chr17
-bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND2_chr17.vcf delly_ALL2.vcf
-搜索是否有病毒在新的文件
-grep MN772835 delly_ALL2.vcf(失败）
+```
 
-检查环境的命令
- conda environments:
-激活我之前的环境
+## 提取 BND
+
+```bash
+bcftools view -i 'SVTYPE="BND"' -Ov -o delly_BND2.vcf delly_ALL2.vcf
+```
+
+## 精确筛选 chr17
+
+```bash
+bcftools view -i 'CHROM=="chr17" && SVTYPE=="BND"' -Ov -o delly_BND2_chr17.vcf delly_ALL2.vcf
+```
+
+## 搜索是否有病毒
+
+```bash
+grep MN772835 delly_ALL2.vcf
+```
+
+## 检查环境的命令
+
+```bash
+conda environments:
+```
+
+## 激活之前的环境
+
+```bash
 conda activate bcftools_env
-看看版本号
+```
+
+## 查看版本号
+
+```bash
 bcftools 1.17
-bgzip 压缩 VCF 文件
+```
+
+## bgzip 压缩 VCF 文件
+
+```bash
 bgzip delly_BND_chr17.vcf
 bgzip delly_BND2_chr17.vcf
-建立 tabix 索引
+```
+
+## 建立 tabix 索引
+
+```bash
 tabix -p vcf delly_BND_chr17.vcf.gz
 tabix -p vcf delly_BND2_chr17.vcf.gz
-重新运行合并命令
-bcftools concat -a -O v -o merged_BND_chr17.vcf delly_BND_chr17.vcf.gz delly_BND2_chr17.vcf.gz
+```
 
-合并bam（注意一定得有索引文件）
+## 重新运行合并命令
+
+```bash
+bcftools concat -a -O v -o merged_BND_chr17.vcf delly_BND_chr17.vcf.gz delly_BND2_chr17.vcf.gz
+```
+
+## 合并 BAM（注意一定得有索引文件）
+
+```bash
 samtools merge -@ 12 merged.bam zzq2.sorted.bam map.sorted.bam
-对bam进行索引
+```
+
+## 对 BAM 进行索引
+
+```bash
 samtools index merged.bam
-跑delly：
+```
+
+## 跑 delly
+
+```bash
 ./delly_v1.3.3_linux_x86_64bit call \
   -g reference.fa \
   -o merged.sv.bcf \
   merged.bam
-筛选一下BND
-grep "SVTYPE=BND" merged.sv.vcf > merged.BND.vcf
+```
 
-切换环境
+## 筛选 BND
+
+```bash
+grep "SVTYPE=BND" merged.sv.vcf > merged.BND.vcf
+```
+
+## 切换环境
+
+```bash
 conda env list
 conda activate base
 fastp
+```
 
-比对
+## 比对（nohup 后台运行）
+
+```bash
 nohup bash -c "bwa mem -t 12 fixed_human_virus.fa zzq2_1.trim.fq.gz zzq2_2.trim.fq.gz | samtools view -b - | samtools sort -@ 4 -o zzq2.sorted.bam" &
+```
 
-查看虚拟环境
+## 查看虚拟环境
+
+```bash
 conda info --envs
-或者
+```
+
+或
+
+```bash
 conda env list
-进入虚拟环境
+```
+
+## 进入虚拟环境
+
+```bash
 conda activate myenv
-看有哪些包
+```
+
+## 查看已安装包
+
+```bash
 conda list
-跑delly：
+```
+
+## 跑 delly
+
+```bash
 ./delly_v1.3.3_linux_x86_64bit call \
   -g fixed_human_virus.fa \
   -o merged.sv.bcf \
   zzq2.sorted.bam
-切换环境
+```
+
+## 切换环境
+
+```bash
 conda activate bcftools_env
+```
 
-提取所有 BND 类型变异
+## 提取所有 BND 类型变异
+
+```bash
 bcftools view -i 'INFO/SVTYPE="BND"' merged.sv.vcf -Ov -o merged.BND.vcf
+```
 
-查找染色体 MN772835 相关的变异
+## 查找 MN772835 染色体相关变异
+
+```bash
 grep MN772835 merged.sv.vcf > MN772835_related_variants.vcf
-
-
-
-
+```
 
