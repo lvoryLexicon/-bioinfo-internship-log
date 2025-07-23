@@ -88,5 +88,37 @@ samtools index merged.bam
 筛选一下BND
 grep "SVTYPE=BND" merged.sv.vcf > merged.BND.vcf
 
+切换环境
+conda env list
+conda activate base
+fastp
+
+比对
+nohup bash -c "bwa mem -t 12 fixed_human_virus.fa zzq2_1.trim.fq.gz zzq2_2.trim.fq.gz | samtools view -b - | samtools sort -@ 4 -o zzq2.sorted.bam" &
+
+查看虚拟环境
+conda info --envs
+或者
+conda env list
+进入虚拟环境
+conda activate myenv
+看有哪些包
+conda list
+跑delly：
+./delly_v1.3.3_linux_x86_64bit call \
+  -g fixed_human_virus.fa \
+  -o merged.sv.bcf \
+  zzq2.sorted.bam
+切换环境
+conda activate bcftools_env
+
+提取所有 BND 类型变异
+bcftools view -i 'INFO/SVTYPE="BND"' merged.sv.vcf -Ov -o merged.BND.vcf
+
+查找染色体 MN772835 相关的变异
+grep MN772835 merged.sv.vcf > MN772835_related_variants.vcf
+
+
+
 
 
