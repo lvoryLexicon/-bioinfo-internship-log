@@ -702,34 +702,133 @@ graph TD
 
 ---
 
+以下是为Linux教程补充的内容，注重实用性和安全性：
+
 ## 七、实用技巧与资源推荐
 
-* 快捷键（Tab补全、Ctrl+C、Ctrl+Z等）
-* 查看命令帮助（man、--help）
-* 常用配置文件位置
-* 推荐的学习资源和社区论坛（如Biostars、Stack Overflow）
+1. **快捷键**  
+   - `Tab`：命令/路径自动补全（按两次显示所有匹配项）
+   - `Ctrl+C`：强制终止当前进程
+   - `Ctrl+Z`：挂起当前进程（用`fg`恢复）
+   - `Ctrl+D`：退出终端/结束输入流
+   - `Ctrl+R`：逆向搜索历史命令
+   - `Ctrl+L`：清屏（等效`clear`）
+   - `!!`：重复上一条命令
+   - `!$`：引用上条命令的最后一个参数
+
+2. **查看命令帮助**  
+   - `man 命令名`：查看命令手册（如`man grep`）
+   - `命令 --help`：快速查看参数说明（如`ls --help`）
+   - `info 命令名`：获取更详细的文档（如`info coreutils`）
+   - `tldr 命令名`：简化版帮助（需安装`tldr`工具）
+
+3. **常用配置文件位置**  
+   ```bash
+   ~/.bashrc       # Bash Shell配置
+   ~/.vimrc        # Vim编辑器配置
+   /etc/ssh/sshd_config  # SSH服务配置
+   /etc/fstab      # 文件系统挂载配置
+   ~/.ssh/config   # SSH客户端配置
+   /etc/hosts      # 本地域名解析
+   ```
+
+4. **推荐学习资源**  
+   - **社区论坛**：
+     - [Stack Overflow](https://stackoverflow.com/)：编程/运维问题解答
+     - [Biostars](https://www.biostars.org/)：生物信息学专用社区
+     - [Linux中国](https://linux.cn/)：中文Linux技术社区
+   - **在线教程**：
+     - [Linux Journey](https://linuxjourney.com/)：交互式学习网站
+     - [Command Line Fu](https://www.commandlinefu.com/)：命令行技巧库
+   - **书籍推荐**：
+     - 《鸟哥的Linux私房菜》
+     - 《Linux命令行与Shell脚本编程大全》
 
 ---
 
 ## 八、附录
 
-* 常用命令速查表
-* 常见错误与解决办法
+**常用命令速查表**
+| 类别       | 命令示例                  | 作用                     |
+|------------|---------------------------|--------------------------|
+| 文件操作   | `cp -r dir1 dir2`         | 递归复制目录             |
+|            | `find /path -name "*.log"`| 按名称搜索文件           |
+| 文本处理   | `grep "pattern" file`     | 文本搜索                 |
+|            | `awk '{print $1}' file`   | 提取第一列数据           |
+| 系统监控   | `top`                     | 实时进程监控             |
+|            | `df -h`                   | 磁盘空间检查（人类可读） |
+| 网络       | `curl -O http://url/file` | 下载文件                 |
+|            | `ssh -p 2222 user@host`   | 指定端口连接SSH          |
+
+**常见错误与解决办法**
+1. **Permission denied**  
+   - 原因：权限不足
+   - 解决：`chmod +x 文件名`添加执行权限，或用`sudo`提权（谨慎使用）
+
+2. **Command not found**  
+   - 原因：命令未安装或路径错误
+   - 解决：用`which 命令`检查路径，或通过包管理器安装（如`apt install 包名`）
+
+3. **No space left on device**  
+   - 解决步骤：
+     ```bash
+     df -h              # 查看磁盘占用
+     du -sh /* | sort -rh  # 定位大文件
+     rm /tmp/*.log       # 清理日志文件
+     ```
+
+4. **SSH连接超时**  
+   - 检查：`ping 服务器IP`（网络连通性）
+   - 确认：`ssh -v 用户@IP` 查看详细错误日志
 
 ---
 
-# 其他建议
+## 其他建议
 
-* **注重环境搭建**，例如如何连接服务器，MobaXterm等工具介绍
-* **注重安全**，提醒不要随意使用root权限等
+**环境搭建指南**
+1. **连接服务器**  
+   - Windows用户：
+     - 工具：[MobaXterm](https://mobaxterm.mobatek.net/)（支持SSH/SFTP/X11）
+     - 方法：输入IP、端口、用户名密码建立SSH连接
+   - macOS/Linux：
+     ```bash
+     ssh -p 22 username@server_ip
+     ```
+
+2. **开发环境建议**  
+   - 使用`conda`管理生物信息软件环境：
+     ```bash
+     conda create -n bioinfo python=3.8
+     conda activate bioinfo
+     ```
+   - 通过`Docker`保证环境一致性：
+     ```bash
+     docker pull biocontainers/fastqc
+     docker run -it biocontainers/fastqc
+     ```
+
+**安全注意事项**  
+1. **权限管理**  
+   - 避免直接使用`root`，用`sudo`执行特权命令
+   - 遵循最小权限原则：`chmod 600 密钥文件`
+
+2. **高危操作预警**  
+   - ❗ 慎用`rm -rf /`（可设置别名防止误删）：
+     ```bash
+     alias rm='rm -i'  # 删除前确认
+     ```
+   - ❗ 通配符谨慎操作：`rm *.log`先执行`ls *.log`确认
+
+3. **防火墙配置**  
+   - 仅开放必要端口：
+     ```bash
+     sudo ufw allow 22/tcp  # 开放SSH端口
+     sudo ufw enable        # 启用防火墙
+     ```
 
 ---
 
-
-
-
-
- 二、常见 Linux 性能分析工具
+## 常见 Linux 性能分析工具
 
  1. top：实时查看系统进程资源占用
 
