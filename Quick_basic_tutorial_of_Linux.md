@@ -664,8 +664,11 @@ graph TD
     D --> E[结果 VCF]
     B --> F[FastQC]
     F --> G[质控报告]
-    E --> H{{Nextflow / Snakemake}}  %% 工作流引擎
+    E --> H[Nextflow/Snakemake]
     G --> H
+    %% 工作流引擎
+    classDef engine fill:#f9f,stroke:#333,stroke-width:2px;
+    class H engine;
 ```
 
 **关键实践原则**：  
