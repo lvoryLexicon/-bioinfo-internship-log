@@ -1,0 +1,4 @@
+pyBigWig
+numpy
+matplotlib
+tqdm
